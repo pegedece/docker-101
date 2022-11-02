@@ -11,3 +11,5 @@ echo --- lista de imagenes ---
 $cmd images -a
 echo --- storage ---
 $cmd system df
+echo --- procesos corriendo en el contendor $cnt_name ---
+$cmd container top $cnt_name
