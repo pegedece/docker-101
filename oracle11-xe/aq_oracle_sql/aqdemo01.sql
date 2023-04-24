@@ -345,7 +345,7 @@ END;
 DECLARE
     subscriber sys.aq$_agent;
 BEGIN
-    subscriber := sys.aq$_agent('prog3', 'prop_queue', NULL);
+    subscriber := sys.aq$_agent('prog3', 'prop_queue', NULL); /* se define como subscriptor para la "input_queue" pero propaga hacia "prop_queue" */
     dbms_aqadm.add_subscriber(
         queue_name => 'input_queue',
         subscriber => subscriber,

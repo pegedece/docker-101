@@ -1,0 +1,657 @@
+SQL> rem ====================================================================
+SQL> rem create a queue user
+SQL> rem ====================================================================
+SQL> 
+SQL> drop user aquser cascade ;
+
+Error que empieza en la línea: 134 del comando :
+drop user aquser cascade
+Informe de error -
+ORA-01918: user 'AQUSER' does not exist
+01918. 00000 -  "user '%s' does not exist"
+*Cause:    User does not exist in the system.
+*Action:   Verify the user name is correct.
+SQL> create user aquser identified by aquser;
+
+User AQUSER creado.
+
+SQL> grant connect, resource, aq_administrator_role to aquser;
+
+Grant correcto.
+
+SQL> 
+SQL> grant execute on dbms_aq to aquser
+  2  /
+
+Grant correcto.
+
+SQL> grant execute on dbms_aqadm to aquser
+  2  /
+
+Grant correcto.
+
+SQL> grant execute on dbms_lock to aquser
+  2  /
+
+Grant correcto.
+
+SQL> 
+SQL> 
+SQL> connect aquser/aquser
+Conectado.
+SQL> set serveroutput on
+SQL> set echo on
+SQL> 
+SQL> rem ====================================================================
+SQL> rem
+SQL> rem Create a type
+SQL> rem
+SQL> rem ====================================================================
+SQL> 
+SQL> create type message as object (
+  2      id NUMBER,
+  3      city VARCHAR2(30),
+  4      priority NUMBER)
+  5  /
+
+Type MESSAGE compilado
+
+SQL> 
+SQL> rem ====================================================================
+SQL> rem
+SQL> rem  Create the table to store the dequeued data
+SQL> rem
+SQL> rem ====================================================================
+SQL> drop table prog1_processed_data
+  2  /
+
+Error que empieza en la línea: 167 del comando :
+drop table prog1_processed_data
+Informe de error -
+ORA-00942: table or view does not exist
+00942. 00000 -  "table or view does not exist"
+*Cause:    
+*Action:
+SQL> drop table prog2_processed_data
+  2  /
+
+Error que empieza en la línea: 169 del comando :
+drop table prog2_processed_data
+Informe de error -
+ORA-00942: table or view does not exist
+00942. 00000 -  "table or view does not exist"
+*Cause:    
+*Action:
+SQL> drop table prog3_processed_data
+  2  /
+
+Error que empieza en la línea: 171 del comando :
+drop table prog3_processed_data
+Informe de error -
+ORA-00942: table or view does not exist
+00942. 00000 -  "table or view does not exist"
+*Cause:    
+*Action:
+SQL> 
+SQL> create table prog1_processed_data
+  2  (
+  3      id NUMBER,
+  4      city VARCHAR2(30),
+  5      priority NUMBER
+  6  )
+  7  /
+
+Table PROG1_PROCESSED_DATA creado.
+
+SQL> 
+SQL> create table prog2_processed_data
+  2  (
+  3      id NUMBER,
+  4      city VARCHAR2(30),
+  5      priority NUMBER
+  6  )
+  7  /
+
+Table PROG2_PROCESSED_DATA creado.
+
+SQL> 
+SQL> create table prog3_processed_data
+  2  (
+  3      id NUMBER,
+  4      city VARCHAR2(30),
+  5      priority NUMBER
+  6  )
+  7  /
+
+Table PROG3_PROCESSED_DATA creado.
+
+SQL> 
+SQL> rem ====================================================================
+SQL> rem   Setup complete
+SQL> rem ====================================================================
+SQL> 
+SQL> 
+SQL> rem Set up queue tables, queues, subscribers etc.
+SQL> set echo off
+Conectado.
+SQL> 
+SQL> rem ==============================
+SQL> rem Error Handling Routine
+SQL> rem ==============================
+SQL> 
+SQL> CREATE or REPLACE PROCEDURE catch_error ( error_code in number,
+  2                                            error_string in varchar2)
+  3  AS
+  4  BEGIN
+  5      dbms_output.put_line('Oracle Server Error = '|| to_char (error_code));
+  6      dbms_output.put_line('Oracle Server Message = '|| error_string);
+  7  END;
+  8  /
+
+Procedure CATCH_ERROR compilado
+
+SQL> 
+SQL> 
+SQL> 
+SQL> rem ==========================================
+SQL> rem Stop Queue input_queue
+SQL> rem ==========================================
+SQL> 
+SQL> DECLARE
+  2  BEGIN
+  3      dbms_output.put_line ('Stopping  Queue input_queue...');
+  4      dbms_aqadm.stop_queue
+  5      (
+  6          queue_name => 'input_queue',
+  7          wait       => TRUE
+  8      );
+  9  
+ 10      dbms_output.put_line ('Stopped Queue input_queue.');
+ 11  
+ 12  exception
+ 13      when others then
+ 14          catch_error(SQLCODE, 'Stop Queue ' || substr(SQLERRM, 1, 256));
+ 15  
+ 16  END;
+ 17  /
+Stopping  Queue input_queue...
+Oracle Server Error = -24010
+Oracle Server Message = Stop Queue ORA-24010: QUEUE AQUSER.INPUT_QUEUE does not exist
+
+Procedimiento PL/SQL terminado correctamente.
+SQL> 
+SQL> rem ==========================================
+SQL> rem Stop Queue prop_queue
+SQL> rem ==========================================
+SQL> 
+SQL> DECLARE
+  2  BEGIN
+  3      dbms_output.put_line ('Stopping  Queue prop_queue...');
+  4      dbms_aqadm.stop_queue
+  5      (
+  6          queue_name => 'prop_queue',
+  7          wait       => TRUE
+  8      );
+  9  
+ 10      dbms_output.put_line ('Stopped Queue prop_queue.');
+ 11  
+ 12  exception
+ 13      when others then
+ 14          catch_error(SQLCODE, 'Stop Queue ' || substr(SQLERRM, 1, 256));
+ 15  
+ 16  END;
+ 17  /
+Stopping  Queue prop_queue...
+Oracle Server Error = -24010
+Oracle Server Message = Stop Queue ORA-24010: QUEUE AQUSER.PROP_QUEUE does not exist
+
+Procedimiento PL/SQL terminado correctamente.
+SQL> 
+SQL> rem ==========================================
+SQL> rem Drop Queue input_queue
+SQL> rem ==========================================
+SQL> 
+SQL> DECLARE
+  2  BEGIN
+  3      dbms_output.put_line ('Dropping  Queue input_queue...');
+  4      dbms_aqadm.drop_queue
+  5      (
+  6          queue_name => 'input_queue'
+  7      );
+  8  
+  9      dbms_output.put_line ('Dropped Queue input_queue.');
+ 10  
+ 11  exception
+ 12      when others then
+ 13          catch_error(SQLCODE, 'Drop Queue ' || substr(SQLERRM, 1, 256));
+ 14  
+ 15  END;
+ 16  /
+Dropping  Queue input_queue...
+Oracle Server Error = -24010
+Oracle Server Message = Drop Queue ORA-24010: QUEUE AQUSER.INPUT_QUEUE does not exist
+
+Procedimiento PL/SQL terminado correctamente.
+SQL> 
+SQL> 
+SQL> rem ==========================================
+SQL> rem Drop Queue prop_queue
+SQL> rem ==========================================
+SQL> 
+SQL> DECLARE
+  2  BEGIN
+  3      dbms_output.put_line ('Dropping  Queue prop_queue...');
+  4      dbms_aqadm.drop_queue
+  5      (
+  6          queue_name => 'prop_queue'
+  7      );
+  8  
+  9      dbms_output.put_line ('Dropped Queue prop_queue.');
+ 10  
+ 11  exception
+ 12      when others then
+ 13          catch_error(SQLCODE, 'Drop Queue ' || substr(SQLERRM, 1, 256));
+ 14  
+ 15  END;
+ 16  /
+Dropping  Queue prop_queue...
+Oracle Server Error = -24010
+Oracle Server Message = Drop Queue ORA-24010: QUEUE AQUSER.PROP_QUEUE does not exist
+
+Procedimiento PL/SQL terminado correctamente.
+SQL> 
+SQL> rem ==========================================
+SQL> rem Drop Input Queue Table
+SQL> rem ==========================================
+SQL> 
+SQL> DECLARE
+  2  BEGIN
+  3      dbms_output.put_line ('Dropping Queue Table input_queue_table...');
+  4      dbms_aqadm.drop_queue_table
+  5      (
+  6          queue_table => 'input_queue_table',
+  7          force => TRUE
+  8      );
+  9  
+ 10      dbms_output.put_line ('Dropped Queue Table input_queue_table.');
+ 11  
+ 12  exception
+ 13      when others then
+ 14          catch_error(SQLCODE, 'Drop Queue Table ' || substr(SQLERRM, 1, 256));
+ 15  
+ 16  END;
+ 17  /
+Dropping Queue Table input_queue_table...
+Oracle Server Error = -24002
+Oracle Server Message = Drop Queue Table ORA-24002: QUEUE_TABLE AQUSER.INPUT_QUEUE_TABLE does not exist
+
+Procedimiento PL/SQL terminado correctamente.
+SQL> 
+SQL> 
+SQL> rem ==========================================
+SQL> rem Drop Prop Queue Table
+SQL> rem ==========================================
+SQL> 
+SQL> DECLARE
+  2  BEGIN
+  3      dbms_output.put_line ('Dropping Queue Table prop_queue_table...');
+  4      dbms_aqadm.drop_queue_table
+  5      (
+  6          queue_table => 'prop_queue_table',
+  7          force => TRUE
+  8      );
+  9  
+ 10      dbms_output.put_line ('Dropped Queue Table prop_queue_table.');
+ 11  
+ 12  exception
+ 13      when others then
+ 14          catch_error(SQLCODE, 'Drop Queue Table ' || substr(SQLERRM, 1, 256));
+ 15  
+ 16  END;
+ 17  /
+Dropping Queue Table prop_queue_table...
+Oracle Server Error = -24002
+Oracle Server Message = Drop Queue Table ORA-24002: QUEUE_TABLE AQUSER.PROP_QUEUE_TABLE does not exist
+
+Procedimiento PL/SQL terminado correctamente.
+SQL> rem ==========================================
+SQL> rem Create a queue table  input_queue_table
+SQL> rem ==========================================
+SQL> 
+SQL> DECLARE
+  2  BEGIN
+  3      dbms_output.put_line ('Creating Queue Table input_queue_table...');
+  4  
+  5      dbms_aqadm.CREATE_queue_table(
+  6          queue_table => 'input_queue_table',
+  7          multiple_consumers => TRUE,
+  8          queue_payload_type => 'message',
+  9          compatible => '8.1.3',
+ 10          comment => 'Creating input queue table');
+ 11  
+ 12  
+ 13      dbms_output.put_line ('Created Queue Table input_queue_table.');
+ 14  
+ 15  exception
+ 16      when others then
+ 17          catch_error(SQLCODE, 'Create Queue Table ' || substr(SQLERRM, 1, 256));
+ 18  
+ 19  END;
+ 20  /
+Creating Queue Table input_queue_table...
+Created Queue Table input_queue_table.
+
+Procedimiento PL/SQL terminado correctamente.
+SQL> 
+SQL> rem ==========================================
+SQL> rem Create a queue table  prop_queue_table
+SQL> rem ==========================================
+SQL> 
+SQL> DECLARE
+  2  BEGIN
+  3      dbms_output.put_line ('Creating Queue Table prop_queue_table...');
+  4  
+  5      dbms_aqadm.CREATE_queue_table(
+  6          queue_table => 'prop_queue_table',
+  7          multiple_consumers => TRUE,
+  8          queue_payload_type => 'message',
+  9          compatible => '8.1.3',
+ 10          comment => 'Creating prop queue table');
+ 11  
+ 12      dbms_output.put_line ('Created Queue Table prop_queue_table.');
+ 13  
+ 14  exception
+ 15      when others then
+ 16          catch_error(SQLCODE, 'Create Queue Table ' || substr(SQLERRM, 1, 256));
+ 17  
+ 18  END;
+ 19  /
+Creating Queue Table prop_queue_table...
+Created Queue Table prop_queue_table.
+
+Procedimiento PL/SQL terminado correctamente.
+SQL> 
+SQL> 
+SQL> rem ==========================================
+SQL> rem Create a queue input_queue
+SQL> rem ==========================================
+SQL> 
+SQL> DECLARE
+  2  BEGIN
+  3  
+  4      dbms_output.put_line ('Creating Queue input_queue...');
+  5  
+  6      dbms_aqadm.CREATE_queue(
+  7          queue_name => 'input_queue',
+  8          queue_table => 'input_queue_table',
+  9          comment => 'Demo Queue');
+ 10  
+ 11      dbms_output.put_line ('Created Queue input_queue.');
+ 12  
+ 13  exception
+ 14      when others then
+ 15          catch_error(SQLCODE, 'Create Queue ' || substr(SQLERRM, 1, 256));
+ 16  
+ 17  END;
+ 18  /
+Creating Queue input_queue...
+Created Queue input_queue.
+
+Procedimiento PL/SQL terminado correctamente.
+SQL> 
+SQL> 
+SQL> rem ==========================================
+SQL> rem Create a queue prop_queue
+SQL> rem ==========================================
+SQL> 
+SQL> DECLARE
+  2  BEGIN
+  3  
+  4      dbms_output.put_line ('Creating Queue prop_queue...');
+  5  
+  6      dbms_aqadm.CREATE_queue(
+  7          queue_name => 'prop_queue',
+  8          queue_table => 'prop_queue_table',
+  9          comment => 'Propagation Queue');
+ 10  
+ 11      dbms_output.put_line ('Created Queue prop_queue.');
+ 12  
+ 13  exception
+ 14      when others then
+ 15          catch_error(SQLCODE, 'Create Queue ' || substr(SQLERRM, 1, 256));
+ 16  
+ 17  END;
+ 18  /
+Creating Queue prop_queue...
+Created Queue prop_queue.
+
+Procedimiento PL/SQL terminado correctamente.
+SQL> 
+SQL> rem ====================================
+SQL> rem Start input queue input_queue
+SQL> rem ====================================
+SQL> 
+SQL> DECLARE
+  2  BEGIN
+  3  
+  4      dbms_output.put_line('starting queue input_queue...');
+  5  
+  6      dbms_aqadm.start_queue(
+  7          queue_name => 'input_queue');
+  8  
+  9      dbms_output.put_line ('Started Queue input_queue.');
+ 10  
+ 11  exception
+ 12      when others then
+ 13          catch_error(SQLCODE, 'Start Queue ' || substr(SQLERRM, 1, 256));
+ 14  
+ 15  END;
+ 16  /
+starting queue input_queue...
+Started Queue input_queue.
+
+Procedimiento PL/SQL terminado correctamente.
+SQL> 
+SQL> 
+SQL> rem ====================================
+SQL> rem Start input queue prop_queue
+SQL> rem ====================================
+SQL> 
+SQL> DECLARE
+  2  BEGIN
+  3  
+  4      dbms_output.put_line('starting Prop queue prop_queue...');
+  5  
+  6      dbms_aqadm.start_queue(
+  7          queue_name => 'prop_queue');
+  8  
+  9      dbms_output.put_line ('Started Queue prop_queue.');
+ 10  
+ 11  exception
+ 12      when others then
+ 13          catch_error(SQLCODE, 'Start Queue ' || substr(SQLERRM, 1, 256));
+ 14  
+ 15  END;
+ 16  /
+starting Prop queue prop_queue...
+Started Queue prop_queue.
+
+Procedimiento PL/SQL terminado correctamente.
+SQL> 
+SQL> 
+SQL> rem ========================================
+SQL> rem Create queue subscribers
+SQL> rem ========================================
+SQL> 
+SQL> DECLARE
+  2      subscriber sys.aq$_agent;
+  3  BEGIN
+  4      subscriber := sys.aq$_agent('prog1', NULL, NULL);
+  5      dbms_aqadm.add_subscriber(
+  6          queue_name => 'input_queue',
+  7          subscriber => subscriber);
+  8      dbms_output.put_line ('Added subscriber prog1 to input_queue.');
+  9  END;
+ 10  /
+Added subscriber prog1 to input_queue.
+
+Procedimiento PL/SQL terminado correctamente.
+SQL> 
+SQL> DECLARE
+  2      subscriber1 sys.aq$_agent;
+  3  BEGIN
+  4      subscriber1 := sys.aq$_agent('prog2', NULL, NULL);
+  5      dbms_aqadm.add_subscriber(
+  6          queue_name => 'input_queue',
+  7          subscriber => subscriber1,
+  8          rule       => 'priority > 2');
+  9      dbms_output.put_line ('Added subscriber prog2 to input_queue.');
+ 10  END;
+ 11  /
+Added subscriber prog2 to input_queue.
+
+Procedimiento PL/SQL terminado correctamente.
+SQL> 
+SQL> DECLARE
+  2      subscriber sys.aq$_agent;
+  3  BEGIN
+  4      subscriber := sys.aq$_agent('prog3', 'prop_queue', NULL);
+  5      dbms_aqadm.add_subscriber(
+  6          queue_name => 'input_queue',
+  7          subscriber => subscriber,
+  8          rule => 'priority = 2');
+  9      dbms_output.put_line ('Added subscriber prog3@prop_queue to input_queue.');
+ 10  END;
+ 11  /
+Added subscriber prog3@prop_queue to input_queue.
+
+Procedimiento PL/SQL terminado correctamente.
+SQL> 
+SQL> rem ========================================
+SQL> rem Schedule propagation
+SQL> rem ========================================
+SQL> 
+SQL> DECLARE
+  2  BEGIN
+  3  
+  4      dbms_aqadm.schedule_propagation(
+  5          queue_name => 'input_queue',
+  6          latency => '10');
+  7      dbms_output.put_line (
+  8        'Scheduled propagation from input_queue to other queues.');
+  9  END;
+ 10  /
+Scheduled propagation from input_queue to other queues.
+
+Procedimiento PL/SQL terminado correctamente.
+SQL> 
+SQL> rem ========================================
+SQL> rem Setup complete
+SQL> rem ========================================
+SQL> rem Load dequeue procedures
+SQL> set echo off
+Conectado.
+SQL> set serveroutput on
+SQL> 
+SQL> 
+SQL> CREATE OR REPLACE PROCEDURE DEMO_DEQUEUE(appname varchar2) AS
+  2      deq_msgid           RAW(16);
+  3      dopt                dbms_aq.dequeue_options_t;
+  4      mprop               dbms_aq.message_properties_t;
+  5      payload             message;
+  6      no_messages         exception;
+  7      pragma exception_init(no_messages, -25228);
+  8  
+  9  BEGIN
+ 10  
+ 11      dopt.consumer_name := appname;
+ 12      dopt.wait := 30;
+ 13      dopt.navigation := DBMS_AQ.FIRST_MESSAGE;
+ 14  
+ 15  
+ 16      dbms_aq.dequeue(
+ 17          queue_name => 'input_queue',
+ 18          dequeue_options => dopt,
+ 19          message_properties => mprop,
+ 20          payload => payload,
+ 21          msgid => deq_msgid);
+ 22  
+ 23      IF appname = 'prog1' THEN
+ 24          insert into  prog1_processed_data
+ 25          values (payload.id, payload.city, payload.priority);
+ 26      ELSIF appname = 'prog2' THEN
+ 27          insert into  prog2_processed_data
+ 28          values (payload.id, payload.city, payload.priority);
+ 29      END IF;
+ 30  
+ 31      commit;
+ 32  
+ 33  EXCEPTION
+ 34      WHEN no_messages THEN
+ 35      dbms_output.put_line('No more messages in queue ');
+ 36      commit;
+ 37  
+ 38  END demo_dequeue;
+ 39  /
+
+Procedure DEMO_DEQUEUE compilado
+
+SQL> 
+SQL> CREATE OR REPLACE PROCEDURE DEMO_PROP_DEQUEUE (appname varchar2) AS
+  2      deq_msgid           RAW(16);
+  3      dopt                dbms_aq.dequeue_options_t;
+  4      mprop               dbms_aq.message_properties_t;
+  5      payload             message;
+  6      no_messages         exception;
+  7      pragma exception_init(no_messages, -25228);
+  8      start_tx            NUMBER;
+  9      finish_tx           NUMBER;
+ 10  
+ 11  BEGIN
+ 12  
+ 13      dopt.consumer_name := appname;
+ 14      dopt.wait := DBMS_AQ.NO_WAIT;
+ 15      dopt.navigation := DBMS_AQ.FIRST_MESSAGE;
+ 16  
+ 17      start_tx := dbms_utility.get_time;
+ 18      LOOP
+ 19  
+ 20          BEGIN
+ 21              finish_tx := dbms_utility.get_time;
+ 22              IF finish_tx - start_tx > 12000 THEN
+ 23                  exit;
+ 24              END IF;
+ 25  
+ 26              dbms_aq.dequeue(
+ 27                  queue_name => 'prop_queue',
+ 28                  dequeue_options => dopt,
+ 29                  message_properties => mprop,
+ 30                  payload => payload,
+ 31                  msgid => deq_msgid);
+ 32  
+ 33              IF appname = 'prog3' THEN
+ 34                  insert into  prog3_processed_data
+ 35                  values (payload.id, payload.city, payload.priority);
+ 36              END IF;
+ 37  
+ 38              commit;
+ 39  
+ 40          EXCEPTION
+ 41              WHEN no_messages THEN
+ 42              null;
+ 43          END;
+ 44  
+ 45      END LOOP;
+ 46  END demo_prop_dequeue;
+ 47  /
+
+Procedure DEMO_PROP_DEQUEUE compilado
+
+SQL> 
+SQL> 
+SQL> 
+SQL> rem ====================================================================
+SQL> rem   Setup complete
+SQL> rem ====================================================================
+SQL> 
+SQL> spool off

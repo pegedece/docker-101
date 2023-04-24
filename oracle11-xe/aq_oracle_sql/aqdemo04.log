@@ -1,0 +1,26 @@
+SQL> 
+SQL> DECLARE
+  2  BEGIN
+  3      demo_prop_dequeue('prog3');
+  4  END;
+  5  /
+
+PL/SQL procedure successfully completed.
+
+SQL> 
+SQL> rem Show the number of messages in prog3_processed_data table
+SQL> select count(*) from prog3_processed_data;
+
+  COUNT(*)
+----------
+        34
+
+1 row selected. 
+
+SQL> 
+SQL> /*
+SQL>delete prog3_processed_data;
+SQL>commit;
+SQL>*/
+SQL> 
+SQL> spool off

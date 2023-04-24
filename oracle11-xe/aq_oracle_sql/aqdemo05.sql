@@ -59,8 +59,10 @@ BEGIN
                 agent =>  agent_w_msg);
 
             IF agent_w_msg.name = 'PROG1' THEN
+                dbms_output.put_line ('desencolando mensajes para prog1');
                 demo_dequeue('prog1');
             ELSIF agent_w_msg.name = 'PROG2' THEN
+                dbms_output.put_line ('desencolando mensajes para prog2');
                 demo_dequeue('prog2');
             END IF;
 
@@ -76,9 +78,18 @@ END;
 rem show the number of messages in prog1_processed_data table
 select count(*) from prog1_processed_data;
 
+/*
+delete prog1_processed_data;
+commit;
+*/
+
 rem show the number of messages in prog2_processed_data table
 select count(*) from prog2_processed_data;
 
+/*
+delete prog2_processed_data;
+commit;
+*/
 
 spool off
 

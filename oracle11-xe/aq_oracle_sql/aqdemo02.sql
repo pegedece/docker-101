@@ -34,17 +34,20 @@ CREATE OR REPLACE PROCEDURE DEMO_ENQUEUE (userinfo message,
                                           priority number) AS
 
     enq_msgid   RAW(16);
-    eopt                dbms_aq.enqueue_options_t;
-    mprop               dbms_aq.message_properties_t;
+    eopt        dbms_aq.enqueue_options_t;
+    mprop       dbms_aq.message_properties_t;
 
 BEGIN
+
     mprop.priority := priority;
+    
     dbms_aq.enqueue(
-        queue_name => 'input_queue',
-        enqueue_options => eopt,
+        queue_name         => 'input_queue',
+        enqueue_options    => eopt,
         message_properties => mprop,
-        payload => userinfo,
-        msgid => enq_msgid);
+        payload            => userinfo,
+        msgid              => enq_msgid
+    );
 
     commit;
 
@@ -57,24 +60,28 @@ DECLARE
     city2 varchar2(30) := 'REDWOOD SHORES';
     city3 varchar2(30) := 'SUNNYVALE';
     city4 varchar2(30) := 'BURLINGAME';
-
+    msg_priority    NUMBER;
 BEGIN
-    for i in 1..100 LOOP
-            IF mod (i, 3) = 0 THEN
-                payload := message(i, city1, mod(i, 3) + 1);
-            ELSIF mod(i, 4) = 0 THEN
-                payload := message(i, city2, mod(i, 3) + 1);
-            ELSIF mod(i, 2) = 0 THEN
-                payload := message(i, city3, mod(i, 3) + 1);
-            ELSE
-                payload := message(i, city4, mod(i, 3) + 1);
-            END IF;
+    for i in 1..100 
+    LOOP
+        --
+        msg_priority := mod(i, 3) + 1;
+        --
+        IF mod (i, 3) = 0 THEN
+            payload := message(i, city1, msg_priority );
+        ELSIF mod(i, 4) = 0 THEN
+            payload := message(i, city2, msg_priority);
+        ELSIF mod(i, 2) = 0 THEN
+            payload := message(i, city3, msg_priority);
+        ELSE
+            payload := message(i, city4, msg_priority);
+        END IF;
 
-            demo_enqueue(payload, (mod(i, 3) + 1));
+        demo_enqueue(payload, msg_priority);
 
-            IF mod (i, 10) = 0 THEN
-                dbms_lock.sleep(3);
-            END IF;
+        IF mod (i, 10) = 0 THEN
+            dbms_lock.sleep(3);
+        END IF;
 
     END LOOP;
 END;

@@ -37,4 +37,9 @@ END;
 rem Show the number of messages in prog3_processed_data table
 select count(*) from prog3_processed_data;
 
+/*
+delete prog3_processed_data;
+commit;
+*/
+
 spool off

@@ -1,0 +1,66 @@
+SQL> 
+SQL> CREATE OR REPLACE PROCEDURE DEMO_ENQUEUE (userinfo message,
+  2                                            priority number) AS
+  3  
+  4      enq_msgid   RAW(16);
+  5      eopt        dbms_aq.enqueue_options_t;
+  6      mprop       dbms_aq.message_properties_t;
+  7  
+  8  BEGIN
+  9  
+ 10      mprop.priority := priority;
+ 11  
+ 12      dbms_aq.enqueue(
+ 13          queue_name         => 'input_queue',
+ 14          enqueue_options    => eopt,
+ 15          message_properties => mprop,
+ 16          payload            => userinfo,
+ 17          msgid              => enq_msgid
+ 18      );
+ 19  
+ 20      commit;
+ 21  
+ 22  END demo_enqueue;
+ 23  /
+
+Procedure DEMO_ENQUEUE compiled
+
+SQL> 
+SQL> DECLARE
+  2      payload message;
+  3      city1 varchar2(30) := 'BELMONT';
+  4      city2 varchar2(30) := 'REDWOOD SHORES';
+  5      city3 varchar2(30) := 'SUNNYVALE';
+  6      city4 varchar2(30) := 'BURLINGAME';
+  7      msg_priority    NUMBER;
+  8  BEGIN
+  9      for i in 1..100 
+ 10      LOOP
+ 11          --
+ 12          msg_priority := mod(i, 3) + 1;
+ 13          --
+ 14          IF mod (i, 3) = 0 THEN
+ 15              payload := message(i, city1, msg_priority );
+ 16          ELSIF mod(i, 4) = 0 THEN
+ 17              payload := message(i, city2, msg_priority);
+ 18          ELSIF mod(i, 2) = 0 THEN
+ 19              payload := message(i, city3, msg_priority);
+ 20          ELSE
+ 21              payload := message(i, city4, msg_priority);
+ 22          END IF;
+ 23  
+ 24          demo_enqueue(payload, msg_priority);
+ 25  
+ 26          IF mod (i, 10) = 0 THEN
+ 27              dbms_lock.sleep(3);
+ 28          END IF;
+ 29  
+ 30      END LOOP;
+ 31  END;
+ 32  /
+
+PL/SQL procedure successfully completed.
+
+SQL> 
+SQL> 
+SQL> spool off

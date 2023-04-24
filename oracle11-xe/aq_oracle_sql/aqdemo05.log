@@ -1,0 +1,216 @@
+SQL> 
+SQL> DECLARE
+  2      qlist dbms_aq.aq$_agent_list_t;
+  3      agent_w_msg sys.aq$_agent;
+  4      start_tx number;
+  5      finish_tx number;
+  6      listen_timeout exception;
+  7      pragma exception_init(listen_timeout, -25254);
+  8  
+  9  BEGIN
+ 10  
+ 11      qlist(0) := sys.aq$_agent('prog1', 'input_queue', NULL);
+ 12      qlist(1) := sys.aq$_agent('prog2', 'input_queue', NULL);
+ 13  
+ 14      dbms_output.put_line ('Listening on input_queue.');
+ 15  
+ 16      start_tx := dbms_utility.get_time;
+ 17      LOOP
+ 18          BEGIN
+ 19  
+ 20              finish_tx := dbms_utility.get_time;
+ 21              IF finish_tx - start_tx > 12000 THEN
+ 22                  exit;
+ 23              END IF;
+ 24  
+ 25              DBMS_AQ.LISTEN(
+ 26                  agent_list => qlist,
+ 27                  wait => 30,
+ 28                  agent =>  agent_w_msg);
+ 29  
+ 30              IF agent_w_msg.name = 'PROG1' THEN
+ 31                  dbms_output.put_line ('desencolando mensajes para prog1');
+ 32                  demo_dequeue('prog1');
+ 33              ELSIF agent_w_msg.name = 'PROG2' THEN
+ 34                  dbms_output.put_line ('desencolando mensajes para prog2');
+ 35                  demo_dequeue('prog2');
+ 36              END IF;
+ 37  
+ 38          EXCEPTION
+ 39              when listen_timeout THEN
+ 40                  null;
+ 41          END;
+ 42  
+ 43      END LOOP;
+ 44  END;
+ 45  /
+Listening on input_queue.
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog1
+desencolando mensajes para prog2
+desencolando mensajes para prog2
+desencolando mensajes para prog2
+desencolando mensajes para prog2
+desencolando mensajes para prog2
+desencolando mensajes para prog2
+desencolando mensajes para prog2
+desencolando mensajes para prog2
+desencolando mensajes para prog2
+desencolando mensajes para prog2
+desencolando mensajes para prog2
+desencolando mensajes para prog2
+desencolando mensajes para prog2
+desencolando mensajes para prog2
+desencolando mensajes para prog2
+desencolando mensajes para prog2
+desencolando mensajes para prog2
+desencolando mensajes para prog2
+desencolando mensajes para prog2
+desencolando mensajes para prog2
+desencolando mensajes para prog2
+desencolando mensajes para prog2
+desencolando mensajes para prog2
+desencolando mensajes para prog2
+desencolando mensajes para prog2
+desencolando mensajes para prog2
+desencolando mensajes para prog2
+desencolando mensajes para prog2
+desencolando mensajes para prog2
+desencolando mensajes para prog2
+desencolando mensajes para prog2
+desencolando mensajes para prog2
+desencolando mensajes para prog2
+
+
+PL/SQL procedure successfully completed.
+
+SQL> 
+SQL> rem show the number of messages in prog1_processed_data table
+SQL> select count(*) from prog1_processed_data;
+
+  COUNT(*)
+----------
+       100
+
+1 row selected. 
+
+SQL> 
+SQL> /*
+SQL>delete prog1_processed_data;
+SQL>commit;
+SQL>*/
+SQL> 
+SQL> rem show the number of messages in prog2_processed_data table
+SQL> select count(*) from prog2_processed_data;
+
+  COUNT(*)
+----------
+        33
+
+1 row selected. 
+
+SQL> 
+SQL> /*
+SQL>delete prog2_processed_data;
+SQL>commit;
+SQL>*/
+SQL> 
+SQL> spool off
